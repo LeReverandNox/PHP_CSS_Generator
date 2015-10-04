@@ -226,7 +226,7 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
 function create_sprite($info_images, $parameters, $sprite_dimension)
 {
     // print_r($info_images);
-    var_Dump( $parameters);
+    // var_Dump( $parameters);
     // $dst_x = 0;
     // $dst_y = 0;
     // $column_width = array();
@@ -236,15 +236,13 @@ function create_sprite($info_images, $parameters, $sprite_dimension)
             $nb_lines = ceil($nb_images / $column);
     else
     {
-        $nb_lines = 0;
+        $nb_lines = 2;
         $column = $nb_images;
     }
 
-echo $parameters[3] . "\n\n\n";
-echo $column;
     $sprite_dimension["width"] += $parameters[3] * ($column  - 1);
     $sprite_dimension["height"] += $parameters[3] * ($nb_lines - 1);
-    echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
+    // echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
 
     $sprite = imagecreatetruecolor($sprite_dimension["width"], $sprite_dimension["height"]);
     imagesavealpha($sprite, true);
@@ -322,7 +320,7 @@ $parameters = check_options($options);
 check_folder($folder, $parameters[0]);
 $info_images = get_images_info($images);
 $sprite_dimension = figure_sprite_width($info_images, $parameters);
-debug($sprite_dimension, $parameters, $info_images);
+// debug($sprite_dimension, $parameters, $info_images);
 
 if(create_sprite($info_images, $parameters, $sprite_dimension))
 {
