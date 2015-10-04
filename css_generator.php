@@ -46,39 +46,18 @@ function check_options($options)
     if (isset($options["columns_number"]))
         $parameters[5] = (int)$options["columns_number"];
 
+    if (!preg_match("/.*\.png$/", $parameters[1]))
+    {
+        $parameters[1] .= ".png";
+    }
+
+    if (!preg_match("/.*\.css$/", $parameters[2]))
+    {
+        $parameters[2] .= ".css";
+    }
+
     return ($parameters);
 }
-
-// function check_options($options)
-// {
-//     if (condition)
-//     {
-//         arra
-//     }
-
-//     return $options;
-// }
-
-// function scan_folder($folder, $recursive)
-// {
-//     $scan = opendir($folder);
-//     while (false !== ($entry = readdir($scan)))
-//     {
-//         // echo "$entry\n";
-//         if (pathinfo($entry, PATHINFO_EXTENSION) == "png")
-//         {
-//             echo "Le fichier $entry est une image .png \n";
-//         }
-
-//         if (is_dir($folder . "/" . $entry) && $recursive)
-//         {
-//             if (($entry !== ".") AND ($entry !==  ".."))
-//             {
-//                 echo "$entry/ est un dossier\n";
-//             }
-//         }
-//     }
-// }
 
 function scan_folder($directory, $recursive)
 {
@@ -143,9 +122,12 @@ function get_images_info($images)
     $i = 0;
     foreach ($images as $image)
     {
-        array_push($info_images, getimagesize($image));
-        array_push($info_images[$i], $image);
-        $i++;
+        if(@exif_imagetype($image))
+        {
+            array_push($info_images, getimagesize($image));
+            array_push($info_images[$i], $image);
+            $i++;
+        }
     }
     return ($info_images);
 }
@@ -173,6 +155,10 @@ function  figure_sprite_width($info_images, $parameters)
                 {
                     $row_width[$i] += $info_images[$k][0];
                     $k++;
+                    if ($k == $nb_images)
+                    {
+                        break;
+                    }
                 }
             }
             $sprite_dimension["width"] = max($row_width);
@@ -212,13 +198,22 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
                 array_push($column_height, 0);
             }
 
-            // echo "Nombe de colonnes : $column " . "\n";
+            $i = 0;
             for ($j=0; $j < $nb_images; $j+= $column)
             {
-                // echo $j . "\n";
                 for ($k=0; $k < $column; $k++)
                 {
-                    $column_height[$k] += $info_images[$k]["1"];
+                    // echo $info_images[$i][1] . "Image numero $i\n";
+                    // echo "Hauteur : " . $info_images[$i][1] . "\n";
+                    $column_height[$k] += $info_images[$i][1];
+                    $i++;
+                    // echo "Nom : ".$info_images[$i][4] . "\n";
+                    // echo "On écrit dans la colonne : $k\n";
+                    // echo $column_height[$k] . "\n";
+                    if ($i == $nb_images)
+                    {
+                        break;
+                    }
                 }
             }
     }
@@ -228,43 +223,91 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
 }
 
 
-function create_sprite($info_images, $parameters)
+function create_sprite($info_images, $parameters, $sprite_dimension)
 {
     // print_r($info_images);
     // var_Dump( $parameters);
-    $dst_x = 0;
-    $dst_y = 0;
-    $column_width = array();
+    // $dst_x = 0;
+    // $dst_y = 0;
+    // $column_width = array();
+    $column = $parameters[5];
+    $nb_images = count($info_images);
+    if ($column > 0)
+            $nb_lines = ceil($nb_images / $column);
+    else
+        $nb_lines = 0;
 
-    foreach ($info_images as $image => $info)
-    {
-        // echo $info[0] . "\n";
-        if ($parameters[5] > 0)
+    $sprite_dimension["width"] += $parameters[3] * ($column  - 1);
+    $sprite_dimension["height"] += $parameters[3] * ($nb_lines - 1);
+    // echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
+
+    $sprite = imagecreatetruecolor($sprite_dimension["width"], $sprite_dimension["height"]);
+    imagesavealpha($sprite, true);
+    $alpha = imagecolorallocatealpha($sprite, 0, 0, 0, 127);
+    imagefill($sprite, 0, 0, $alpha);
+
+    $j = $l = 0;
+    $k = 1;
+    $start_x = 0;
+    $start_y = 0;
+    $css = fopen($parameters[2], 'w');
+    fwrite($css, '.sprite {' . "\n\t" . 'width: '. $sprite_dimension["width"] .'px;' . "\n\t" . 'height: '.$sprite_dimension["height"].'px;' . "\n\t" . 'background-image: url('.$parameters[1].');' . "\n\t" . 'background-repeat: no-repeat;' . "\n" . '}'."\n");
+        foreach($info_images as $key => $file)
         {
-            for ($i=0; $i < $parameters[5]; $i++)
+            preg_match("/.*\/(.*)\./", $file[4], $img_name);
+
+            fwrite($css,'.sprite-' . $img_name[1] . "\n" .' {' . "\n\t" . 'background-position: -'. $start_x .'px -'. $start_y. 'px;' . "\n\t" . 'width: '. ($file[0]/* - $parameters[3]*/) . 'px;' . "\n\t" . 'height: '. ($file[1] /*- $parameters[3]*/). 'px;' . "\n" . '}'."\n");
+            $image = imagecreatefrompng($file[4]);
+
+            if ($l < $nb_images  - 1)
             {
-                $column_width[$i] += $info[0];
+                $file[0] += $parameters[3];
+                $file[1] += $parameters[3];
+                $l++;
+            }
+
+            imagecopy($sprite, $image, $start_x , $start_y, 0, 0, $file[0], $file[1]);
+
+            // $i++;
+            if ($nb_lines > 0)
+            {
+                // echo "Image numero : $i\n";
+                // echo $start_x . "\n";
+                // echo $start_y . "\n";
+                // echo $k . "\n";
+                $start_x += $file[0];
+                if ($k == $column)
+                {
+                    $start_x = 0;
+                    $start_y += $file[1];
+                    $k = 0;
+                }
+                $k++;
+            }
+            else
+            {
+                $start_x += $file[0];
             }
         }
-    }
-    // var_dump($column_width);
-    foreach ($info_images as $image => $info)
-    {
-        // echo $info[4] . "\n";
-        $img = imagecreatefrompng($info[4]);
-
-        // imagecopy("./".$parameters[1], $info[4], $dst_x, $dst_y, 0, 0, $info[0], $info[1]);
-    }
+    fclose($css);
+    imagepng($sprite,$parameters[1]); // Save image to file
+    imagedestroy($sprite);
+    return true;
 }
 
-function debug($sprite_dimension, $parameters)
+function debug($sprite_dimension, $parameters, $info_images)
 {
+    foreach ($info_images as $image => $info)
+    {
+        echo "Fichier à traiter : ". $info[4] . "\n";
+    }
     echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
     echo "Le sprite de sortie s'appelera : $parameters[1]\n";
     echo "La feuille de style s'appelera : $parameters[2]\n";
+    echo "Avec un padding de $parameters[3] px entre les images \n";
 }
 
-error_reporting(E_ALL & ~E_NOTICE);
+// error_reporting(E_ALL & ~E_NOTICE);
 $images = array();
 
 $options = getopt("ri:s:p:o:c:", array("recursive", "output-image:", "output-style:", "padding:", "override-size:", "columns_number:"));
@@ -273,6 +316,16 @@ $parameters = check_options($options);
 check_folder($folder, $parameters[0]);
 $info_images = get_images_info($images);
 $sprite_dimension = figure_sprite_width($info_images, $parameters);
-create_sprite($info_images, $parameters);
-debug($sprite_dimension, $parameters);
+debug($sprite_dimension, $parameters, $info_images);
+
+if(create_sprite($info_images, $parameters, $sprite_dimension))
+{
+    echo "Votre sprite et sa feuille de styles ont bien été généré. Bonne journée :)\n";
+    exit(0);
+}
+else
+{
+    echo "Une erreur est survenue. Merci de contacte l'Architecte.\n";
+    exit(1);
+}
 ?>
