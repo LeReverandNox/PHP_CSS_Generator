@@ -226,7 +226,7 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
 function create_sprite($info_images, $parameters, $sprite_dimension)
 {
     // print_r($info_images);
-    // var_Dump( $parameters);
+    var_Dump( $parameters);
     // $dst_x = 0;
     // $dst_y = 0;
     // $column_width = array();
@@ -235,11 +235,16 @@ function create_sprite($info_images, $parameters, $sprite_dimension)
     if ($column > 0)
             $nb_lines = ceil($nb_images / $column);
     else
+    {
         $nb_lines = 0;
+        $column = $nb_images;
+    }
 
+echo $parameters[3] . "\n\n\n";
+echo $column;
     $sprite_dimension["width"] += $parameters[3] * ($column  - 1);
     $sprite_dimension["height"] += $parameters[3] * ($nb_lines - 1);
-    // echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
+    echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
 
     $sprite = imagecreatetruecolor($sprite_dimension["width"], $sprite_dimension["height"]);
     imagesavealpha($sprite, true);
@@ -301,6 +306,7 @@ function debug($sprite_dimension, $parameters, $info_images)
     {
         echo "Fichier à traiter : ". $info[4] . "\n";
     }
+    echo count($info_images) . "fichiers vont etre traiter.\n";
     echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
     echo "Le sprite de sortie s'appelera : $parameters[1]\n";
     echo "La feuille de style s'appelera : $parameters[2]\n";
@@ -325,7 +331,7 @@ if(create_sprite($info_images, $parameters, $sprite_dimension))
 }
 else
 {
-    echo "Une erreur est survenue. Merci de contacte l'Architecte.\n";
+    echo "Une erreur est survenue. Merci de contacter l'Architecte.\n";
     exit(1);
 }
 ?>
