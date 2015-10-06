@@ -15,8 +15,6 @@ function check_args($argv, $argc)
 
 function check_options($options)
 {
-    // var_dump($options);
-    // die;
     $parameters = array(false, "sprite.png", "style.css", 0, 0, 0);
     if (isset($options["r"]) || isset($options["recursive"]))
         $parameters[0] = true;
@@ -132,12 +130,9 @@ function get_images_info($images)
     $i = 0;
     foreach ($images as $image)
     {
-        if(@exif_imagetype($image))
-        {
-            array_push($info_images, getimagesize($image));
-            array_push($info_images[$i], $image);
-            $i++;
-        }
+        array_push($info_images, getimagesize($image));
+        array_push($info_images[$i], $image);
+        $i++;
     }
     return ($info_images);
 }
@@ -156,7 +151,7 @@ function resize_images($parameters, $info_images)
         imagefill($image_dest, 0, 0, $alpha);
 
         imagecopyresized($image_dest, $image_source, 0, 0, 0, 0, $parameters[4], $parameters[4], $file[0], $file[1]);
-
+        imagedestroy($image_source);
         array_push($images_r2u, $image_dest);
         $i++;
     }
