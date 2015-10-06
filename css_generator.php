@@ -142,6 +142,37 @@ function get_images_info($images)
     return ($info_images);
 }
 
+function resize_images($parameters, $info_images)
+{
+    $images_r2u = array();
+    $i = 0;
+    foreach ($info_images as $key => $file)
+    {
+        $image_dest = imagecreatetruecolor($parameters[4], $parameters[4]);
+        $image_source = imagecreatefrompng($file[4]);
+
+        imagesavealpha($image_dest, true);
+        $alpha = imagecolorallocatealpha($image_dest, 0, 0, 0, 127);
+        imagefill($image_dest, 0, 0, $alpha);
+
+        imagecopyresized($image_dest, $image_source, 0, 0, 0, 0, $parameters[4], $parameters[4], $file[0], $file[1]);
+
+        array_push($images_r2u, $image_dest);
+        $i++;
+    }
+    return $images_r2u;
+}
+
+function stock_images($parameters, $info_images)
+{
+    $images_r2u = array();
+    foreach ($info_images as $key => $file)
+    {
+            array_push($images_r2u, imagecreatefrompng($file[4]));
+    }
+    return $images_r2u;
+}
+
 function  figure_sprite_width($info_images, $parameters)
 {
     $sprite_dimension = array("width" => 0, "height" => 0);
@@ -232,8 +263,7 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
     return $sprite_dimension;
 }
 
-
-function create_sprite($info_images, $parameters, $sprite_dimension)
+function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u)
 {
     // print_r($info_images);
     // var_Dump( $parameters);
@@ -259,7 +289,8 @@ function create_sprite($info_images, $parameters, $sprite_dimension)
     $alpha = imagecolorallocatealpha($sprite, 0, 0, 0, 127);
     imagefill($sprite, 0, 0, $alpha);
 
-    $j = $l = 0;
+
+    $i = $j = $l = 0;
     $k = 1;
     $start_x = 0;
     $start_y = 0;
@@ -270,7 +301,7 @@ function create_sprite($info_images, $parameters, $sprite_dimension)
             preg_match("/.*\/(.*)\./", $file[4], $img_name);
 
             fwrite($css,'.sprite-' . $img_name[1] . "\n" .' {' . "\n\t" . 'background-position: -'. $start_x .'px -'. $start_y. 'px;' . "\n\t" . 'width: '. ($file[0]/* - $parameters[3]*/) . 'px;' . "\n\t" . 'height: '. ($file[1] /*- $parameters[3]*/). 'px;' . "\n" . '}'."\n");
-            $image = imagecreatefrompng($file[4]);
+            // $image = imagecreatefrompng($file[4]);
 
             if ($l < $nb_images  - 1)
             {
@@ -279,9 +310,9 @@ function create_sprite($info_images, $parameters, $sprite_dimension)
                 $l++;
             }
 
-            imagecopy($sprite, $image, $start_x , $start_y, 0, 0, $file[0], $file[1]);
+            imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
+            $i++;
 
-            // $i++;
             if ($nb_lines > 0)
             {
                 // echo "Image numero : $i\n";
@@ -321,7 +352,6 @@ function debug($sprite_dimension, $parameters, $info_images)
     echo "Avec un padding de $parameters[3] px entre les images \n";
 }
 
-// error_reporting(E_ALL & ~E_NOTICE);
 $images = array();
 
 $options = getopt("ri:s:p:o:c:", array("recursive", "output-image:", "output-style:", "padding:", "override-size:", "columns_number:"));
@@ -329,10 +359,25 @@ $folder  = check_args($argv, $argc);
 $parameters = check_options($options);
 check_folder($folder, $parameters[0]);
 $info_images = get_images_info($images);
+
+if ($parameters[4] > 0)
+{
+    $images_r2u = resize_images($parameters, $info_images);
+    for ($i=0; $i < count($info_images); $i++)
+    {
+        $info_images[$i][0] = $parameters[4];
+        $info_images[$i][1] = $parameters[4];
+    }
+}
+else
+{
+    $images_r2u = stock_images($parameters, $info_images);
+}
+
 $sprite_dimension = figure_sprite_width($info_images, $parameters);
 // debug($sprite_dimension, $parameters, $info_images);
 
-if(create_sprite($info_images, $parameters, $sprite_dimension))
+if(create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u))
 {
     echo "Votre sprite et sa feuille de styles ont bien été généré. Bonne journée :)\n";
     exit(0);
