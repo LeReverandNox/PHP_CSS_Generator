@@ -50,10 +50,20 @@ function check_options($options)
     {
         $parameters[1] .= ".png";
     }
+    if(preg_match("/.\/./", $parameters[1]))
+    {
+        echo "ERREUR : Veuillez entrer un nom de sprite valide\n";
+        exit;
+    }
 
     if (!preg_match("/.*\.css$/", $parameters[2]))
     {
         $parameters[2] .= ".css";
+    }
+    if(preg_match("/.\/./", $parameters[2]))
+    {
+        echo "ERREUR : Veuillez entrer un nom de feuille de style valide\n";
+        exit;
     }
 
     return ($parameters);
