@@ -3,19 +3,15 @@
 function check_args($argv, $argc)
 {
     if ($argc > 1)
-    {
         return $folder = $argv[$argc - 1];
-    }
     else
-    {
-        echo "ERREUR : Veuillez donner le nom d'un dossier à utiliser.\n";
-        exit;
-    }
+        exit("ERREUR : Veuillez donner le nom d'un dossier à utiliser.\n");
 }
 
 function check_options($options)
 {
     $parameters = array(false, "sprite.png", "style.css", 0, 0, 0);
+
     if (isset($options["r"]) || isset($options["recursive"]))
         $parameters[0] = true;
 
@@ -45,24 +41,14 @@ function check_options($options)
         $parameters[5] = (int)$options["columns_number"];
 
     if (!preg_match("/.*\.png$/", $parameters[1]))
-    {
         $parameters[1] .= ".png";
-    }
     if(preg_match("/.\/./", $parameters[1]))
-    {
-        echo "ERREUR : Veuillez entrer un nom de sprite valide\n";
-        exit;
-    }
+        exit("ERREUR : Veuillez entrer un nom de sprite valide\n");
 
     if (!preg_match("/.*\.css$/", $parameters[2]))
-    {
         $parameters[2] .= ".css";
-    }
     if(preg_match("/.\/./", $parameters[2]))
-    {
-        echo "ERREUR : Veuillez entrer un nom de feuille de style valide\n";
-        exit;
-    }
+        exit("ERREUR : Veuillez entrer un nom de feuille de style valide\n");
 
     return ($parameters);
 }
@@ -99,29 +85,17 @@ function check_folder($folder, $recursive)
     global $images;
 
     if (substr($folder,  -1) !== "/")
-    {
         $folder{strlen($folder)} = "/";
-    }
 
     if (is_dir($folder))
-    {
         $images = scan_folder("/" .   $folder, $recursive);
-    }
     else
-    {
-        echo "Erreur : Veuillez fournir un dossier valide !\n";
-        exit;
-    }
+        exit("Erreur : Veuillez fournir un dossier valide !\n");
 
     if (count($images) != 0)
-    {
-            return $images;
-    }
+        return $images;
     else
-    {
-        echo "Le dossier ne contient aucune image PNG !\n";
-        exit;
-    }
+        exit("Le dossier ne contient aucune image PNG !\n");
 }
 
 function get_images_info($images)
@@ -200,10 +174,7 @@ function  figure_sprite_width($info_images, $parameters)
             $sprite_dimension["width"] = max($row_width);
         }
         elseif ($column > $nb_images)
-        {
-            echo  "ERREUR : Veuillez spécifier un nombre de colonne possible\n";
-            exit;
-        }
+            exit("ERREUR : Veuillez spécifier un nombre de colonne possible\n");
         else
         {
             foreach ($info_images as $image => $info)
@@ -239,32 +210,19 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
             {
                 for ($k=0; $k < $column; $k++)
                 {
-                    // echo $info_images[$i][1] . "Image numero $i\n";
-                    // echo "Hauteur : " . $info_images[$i][1] . "\n";
                     $column_height[$k] += $info_images[$i][1];
                     $i++;
-                    // echo "Nom : ".$info_images[$i][4] . "\n";
-                    // echo "On écrit dans la colonne : $k\n";
-                    // echo $column_height[$k] . "\n";
                     if ($i == $nb_images)
-                    {
                         break;
-                    }
                 }
             }
     }
     $sprite_dimension["height"] = max($column_height);
-    // var_dump($column_height);
     return $sprite_dimension;
 }
 
 function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u)
 {
-    // print_r($info_images);
-    // var_Dump( $parameters);
-    // $dst_x = 0;
-    // $dst_y = 0;
-    // $column_width = array();
     $column = $parameters[5];
     $nb_images = count($info_images);
     if ($column > 0)
@@ -277,59 +235,103 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
 
     $sprite_dimension["width"] += $parameters[3] * ($column  - 1);
     $sprite_dimension["height"] += $parameters[3] * ($nb_lines - 1);
-    // echo "Voici les dimensions de la sprite à générer : " . $sprite_dimension["width"] . "x" . $sprite_dimension["height"]. "px\n";
 
     $sprite = imagecreatetruecolor($sprite_dimension["width"], $sprite_dimension["height"]);
     imagesavealpha($sprite, true);
     $alpha = imagecolorallocatealpha($sprite, 0, 0, 0, 127);
     imagefill($sprite, 0, 0, $alpha);
 
-
     $i = $j = $l = 0;
     $k = 1;
     $start_x = 0;
     $start_y = 0;
-    $css = fopen($parameters[2], 'w');
-    fwrite($css, '.sprite {' . "\n\t" . 'width: '. $sprite_dimension["width"] .'px;' . "\n\t" . 'height: '.$sprite_dimension["height"].'px;' . "\n\t" . 'background-image: url('.$parameters[1].');' . "\n\t" . 'background-repeat: no-repeat;' . "\n" . '}'."\n");
-        foreach($info_images as $key => $file)
+
+    $choice = true;
+    if (file_exists($parameters[2]))
+    {
+        while ($choice == true)
         {
-            preg_match("/.*\/(.*)\./", $file[4], $img_name);
-
-            fwrite($css,'.sprite-' . $img_name[1] . "\n" .' {' . "\n\t" . 'background-position: -'. $start_x .'px -'. $start_y. 'px;' . "\n\t" . 'width: '. ($file[0]/* - $parameters[3]*/) . 'px;' . "\n\t" . 'height: '. ($file[1] /*- $parameters[3]*/). 'px;' . "\n" . '}'."\n");
-            // $image = imagecreatefrompng($file[4]);
-
-            if ($l < $nb_images  - 1)
+            echo "Le fichier $parameters[2] existe déjà, voulez vous l'écraser ? (O)ui / (N)on \n";
+            while ($input = fgets(STDIN))
             {
-                $file[0] += $parameters[3];
-                $file[1] += $parameters[3];
-                $l++;
-            }
-
-            imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
-            $i++;
-
-            if ($nb_lines > 0)
-            {
-                // echo "Image numero : $i\n";
-                // echo $start_x . "\n";
-                // echo $start_y . "\n";
-                // echo $k . "\n";
-                $start_x += $file[0];
-                if ($k == $column)
+                $input = strtolower(trim($input));
+                if ($input === "o" || $input === "oui")
                 {
-                    $start_x = 0;
-                    $start_y += $file[1];
-                    $k = 0;
+                    $css = fopen($parameters[2], 'w');
+                    $choice = false;
+                    break;
                 }
-                $k++;
-            }
-            else
-            {
-                $start_x += $file[0];
+                elseif($input === "n" || $input === "non")
+                {
+                    imagedestroy($sprite);
+                    exit("Arret du générateur...\n");
+                }
+                else
+                    break;
             }
         }
+    }
+    else
+        $css = fopen($parameters[2], 'w');
+
+    fwrite($css, '.sprite {' . "\n\t" . 'width: '. $sprite_dimension["width"] .'px;' . "\n\t" . 'height: '.$sprite_dimension["height"].'px;' . "\n\t" . 'background-image: url('.$parameters[1].');' . "\n\t" . 'background-repeat: no-repeat;' . "\n" . '}'."\n");
+
+    foreach($info_images as $key => $file)
+    {
+        preg_match("/.*\/(.*)\./", $file[4], $img_name);
+        fwrite($css,'.sprite-' . $img_name[1] . "\n" .' {' . "\n\t" . 'background-position: -'. $start_x .'px -'. $start_y. 'px;' . "\n\t" . 'width: '. ($file[0]/* - $parameters[3]*/) . 'px;' . "\n\t" . 'height: '. ($file[1] /*- $parameters[3]*/). 'px;' . "\n" . '}'."\n");
+
+        if ($l < $nb_images  - 1)
+        {
+            $file[0] += $parameters[3];
+            $file[1] += $parameters[3];
+            $l++;
+        }
+
+        imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
+        $i++;
+
+        if ($nb_lines > 0)
+        {
+            $start_x += $file[0];
+            if ($k == $column)
+            {
+                $start_x = 0;
+                $start_y += $file[1];
+                $k = 0;
+            }
+            $k++;
+        }
+        else
+            $start_x += $file[0];
+    }
     fclose($css);
-    imagepng($sprite,$parameters[1]); // Save image to file
+
+    $choice = true;
+    if (file_exists($parameters[1]))
+    {
+        while ($choice == true)
+        {
+            echo "Le fichier $parameters[1] existe déjà, voulez vous l'écraser ? (O)ui / (N)on \n";
+            while ($input = fgets(STDIN))
+            {
+                $input = strtolower(trim($input));
+                if ($input === "o" || $input === "oui")
+                {
+                    imagepng($sprite,$parameters[1]);
+                    $choice = false;
+                    break;
+                }
+                elseif($input === "n" || $input === "non")
+                    exit("Arret du générateur...\n");
+                else
+                    break;
+            }
+        }
+    }
+    else
+        imagepng($sprite,$parameters[1]);
+
     imagedestroy($sprite);
     return true;
 }
@@ -365,21 +367,13 @@ if ($parameters[4] > 0)
     }
 }
 else
-{
     $images_r2u = stock_images($parameters, $info_images);
-}
 
 $sprite_dimension = figure_sprite_width($info_images, $parameters);
 // debug($sprite_dimension, $parameters, $info_images);
 
 if(create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u))
-{
-    echo "Votre sprite et sa feuille de styles ont bien été généré. Bonne journée :)\n";
-    exit(0);
-}
+    exit("Votre sprite et sa feuille de style ont bien été généré. Bonne journée :)\n");
 else
-{
-    echo "Une erreur est survenue. Merci de contacter l'Architecte.\n";
-    exit(1);
-}
+    exit("Une erreur est survenue. Merci de contacter l'Architecte.\n");
 ?>
