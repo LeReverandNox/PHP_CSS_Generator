@@ -40,6 +40,15 @@ function check_options($options)
     if (isset($options["columns_number"]))
         $parameters[5] = (int)$options["columns_number"];
 
+    if (is_array($parameters[1]))
+    {
+        exit("ERREUR: Veuillez fournir un seul nom de sprite !\n");
+    }
+    if (is_array($parameters[2]))
+    {
+        exit("ERREUR: Veuillez fournir un seul nom de feuille de style !\n");
+    }
+
     if (!preg_match("/.*\.png$/", $parameters[1]))
         $parameters[1] .= ".png";
     if(preg_match("/.\/./", $parameters[1]))
