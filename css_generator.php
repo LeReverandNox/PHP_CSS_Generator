@@ -332,14 +332,18 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     else
         imagepng($sprite,$parameters[1]);
 
+    destroy_everything($sprite, $images_r2u);
+    return true;
+}
+
+function destroy_everything($sprite, $images_r2u)
+{
     imagedestroy($sprite);
 
     foreach ($images_r2u as $key => $image)
     {
         imagedestroy($image);
     }
-
-    return true;
 }
 
 function debug($sprite_dimension, $parameters, $info_images)
