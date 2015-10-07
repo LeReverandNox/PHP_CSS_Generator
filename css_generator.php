@@ -283,12 +283,13 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     else
         $css = fopen($parameters[2], 'w');
 
-    fwrite($css, '.sprite {' . "\n\t" . 'width: '. $sprite_dimension["width"] .'px;' . "\n\t" . 'height: '.$sprite_dimension["height"].'px;' . "\n\t" . 'background-image: url('.$parameters[1].');' . "\n\t" . 'background-repeat: no-repeat;' . "\n" . '}'."\n");
+    fwrite($css, ".sprite {\n\twidth: " . $sprite_dimension["width"] . "px;\n\theight: " .$sprite_dimension["height"] . "px;\n\tbackground-image: url(\"" .$parameters[1]. "\");\n\tbackground-repeat: no-repeat;\n}\n");
 
     foreach($info_images as $key => $file)
     {
         preg_match("/.*\/(.*)\./", $file[4], $img_name);
-        fwrite($css,'.sprite-' . $img_name[1] . "\n" .' {' . "\n\t" . 'background-position: -'. $start_x .'px -'. $start_y. 'px;' . "\n\t" . 'width: '. ($file[0]/* - $parameters[3]*/) . 'px;' . "\n\t" . 'height: '. ($file[1] /*- $parameters[3]*/). 'px;' . "\n" . '}'."\n");
+        $img_name[1] = str_replace(" ", "-", $img_name[1]);
+        fwrite($css, ".sprite-" . $img_name[1] . " {\n\tbackground-position: -" . $start_x . "px -" . $start_y . "px;\n\twidth: " . $file[0] . "px;" . "\n\theight: " . $file[1]  . "px;\n}\n");
 
         if ($l < $nb_images  - 1)
         {
