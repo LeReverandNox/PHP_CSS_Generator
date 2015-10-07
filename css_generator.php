@@ -333,6 +333,12 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
         imagepng($sprite,$parameters[1]);
 
     imagedestroy($sprite);
+
+    foreach ($images_r2u as $key => $image)
+    {
+        imagedestroy($image);
+    }
+
     return true;
 }
 
