@@ -66,13 +66,13 @@ function scan_folder($directory, $recursive)
 {
     global $images;
     $relative = ".".$directory;
-    if($dh = opendir($relative))
+    if(is_readable($relative) && $dh = opendir($relative))
     {
         while(false !== ($file = readdir($dh)))
         {
             if(($file !== ".") && ($file !== ".."))
             {
-                if(!is_dir($relative . $file))
+                if(!is_dir($relative . $file) && is_readable($relative . $file))
                 {
                     if (pathinfo($file, PATHINFO_EXTENSION) == "png")
                     {
@@ -96,15 +96,17 @@ function check_folder($folder, $recursive)
     if (substr($folder,  -1) !== "/")
         $folder{strlen($folder)} = "/";
 
-    if (is_dir($folder))
+    if (is_dir($folder) && is_readable($folder) && is_writable($folder))
         $images = scan_folder("/" .   $folder, $recursive);
+    elseif(!is_writable($folder))
+        exit("ERREUR : Vous ne possedez pas les droits d'écriture sur ce dossier.\n");
     else
-        exit("Erreur : Veuillez fournir un dossier valide !\n");
+        exit("ERREUR : Veuillez fournir un dossier valide !\n");
 
     if (count($images) != 0)
         return $images;
     else
-        exit("Le dossier ne contient aucune image PNG !\n");
+        exit("ERREUR : Le dossier ne contient aucune image PNG !\n");
 }
 
 function get_images_info($images)
@@ -113,9 +115,12 @@ function get_images_info($images)
     $i = 0;
     foreach ($images as $image)
     {
-        array_push($info_images, getimagesize($image));
-        array_push($info_images[$i], $image);
-        $i++;
+        if (@getimagesize($image))
+        {
+            array_push($info_images, getimagesize($image));
+            array_push($info_images[$i], $image);
+            $i++;
+        }
     }
     return ($info_images);
 }
