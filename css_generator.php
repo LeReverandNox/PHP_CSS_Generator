@@ -62,6 +62,13 @@ function check_options($options)
     return ($parameters);
 }
 
+function check_writable()
+{
+    $current_dir = getcwd();
+    if (!is_writable($current_dir))
+        exit("ERREUR : Vous n'avez pas les droits d'écriture sur le répertoire courant.\n");
+}
+
 function scan_folder($directory, $recursive)
 {
     global $images;
@@ -96,10 +103,8 @@ function check_folder($folder, $recursive)
     if (substr($folder,  -1) !== "/")
         $folder{strlen($folder)} = "/";
 
-    if (is_dir($folder) && is_readable($folder) && is_writable($folder))
+    if (is_dir($folder) && is_readable($folder))
         $images = scan_folder("/" .   $folder, $recursive);
-    elseif(!is_writable($folder))
-        exit("ERREUR : Vous ne possedez pas les droits d'écriture sur ce dossier.\n");
     else
         exit("ERREUR : Veuillez fournir un dossier valide !\n");
 
@@ -265,7 +270,7 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     {
         while ($choice == true)
         {
-            echo "Le fichier $parameters[2] existe déjà, voulez vous l'écraser ? (O)ui / (N)on \n";
+            echo "Le fichier $parameters[2] existe déjà, voulez vous l'écraser ? (O)ui / (N)on : ";
             while ($input = fgets(STDIN))
             {
                 $input = strtolower(trim($input));
@@ -327,7 +332,7 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     {
         while ($choice == true)
         {
-            echo "Le fichier $parameters[1] existe déjà, voulez vous l'écraser ? (O)ui / (N)on \n";
+            echo "Le fichier $parameters[1] existe déjà, voulez vous l'écraser ? (O)ui / (N)on  : ";
             while ($input = fgets(STDIN))
             {
                 $input = strtolower(trim($input));
@@ -379,6 +384,7 @@ $images = array();
 $options = getopt("ri:s:p:o:c:", array("recursive", "output-image:", "output-style:", "padding:", "override-size:", "columns_number:"));
 $folder  = check_args($argv, $argc);
 $parameters = check_options($options);
+check_writable();
 check_folder($folder, $parameters[0]);
 $info_images = get_images_info($images);
 
