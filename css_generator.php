@@ -115,7 +115,7 @@ function get_images_info($images)
     $i = 0;
     foreach ($images as $image)
     {
-        if (@getimagesize($image))
+        if (imagecreatefrompng($image))
         {
             array_push($info_images, getimagesize($image));
             array_push($info_images[$i], $image);
