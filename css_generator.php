@@ -126,13 +126,34 @@ function check_folder($folder, $recursive)
     }
 }
 
+function check_png($file)
+{
+    if ($file_to_check = fopen($file, 'rb'))
+    {
+        $header = fread($file_to_check, 8);
+        fclose($file_to_check);
+        if (strncmp($header, "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a", 8) == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
 function get_images_info($images)
 {
     $info_images= array();
     $i = 0;
     foreach ($images as $image)
     {
-        if (imagecreatefrompng($image))
+        if (check_png($image))
         {
             array_push($info_images, getimagesize($image));
             array_push($info_images[$i], $image);
