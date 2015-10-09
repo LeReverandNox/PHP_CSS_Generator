@@ -3,9 +3,13 @@
 function check_args($argv, $argc)
 {
     if ($argc > 1)
+    {
         return $folder = $argv[$argc - 1];
+    }
     else
+    {
         exit("ERREUR : Veuillez donner le nom d'un dossier à utiliser.\n");
+    }
 }
 
 function check_options($options)
@@ -41,13 +45,9 @@ function check_options($options)
         $parameters[5] = (int)$options["columns_number"];
 
     if (is_array($parameters[1]))
-    {
         exit("ERREUR: Veuillez fournir un seul nom de sprite !\n");
-    }
     if (is_array($parameters[2]))
-    {
         exit("ERREUR: Veuillez fournir un seul nom de feuille de style !\n");
-    }
 
     if (!preg_match("/.*\.png$/", $parameters[1]))
         $parameters[1] .= ".png";
@@ -66,7 +66,9 @@ function check_writable()
 {
     $current_dir = getcwd();
     if (!is_writable($current_dir))
+    {
         exit("ERREUR : Vous n'avez pas les droits d'écriture sur le répertoire courant.\n");
+    }
 }
 
 function scan_folder($directory, $recursive)
@@ -101,17 +103,27 @@ function check_folder($folder, $recursive)
     global $images;
 
     if (substr($folder,  -1) !== "/")
+    {
         $folder{strlen($folder)} = "/";
+    }
 
     if (is_dir($folder) && is_readable($folder))
+    {
         $images = scan_folder("/" .   $folder, $recursive);
+    }
     else
+    {
         exit("ERREUR : Veuillez fournir un dossier valide !\n");
+    }
 
     if (count($images) != 0)
+    {
         return $images;
+    }
     else
+    {
         exit("ERREUR : Le dossier ne contient aucune image PNG !\n");
+    }
 }
 
 function get_images_info($images)
@@ -193,7 +205,9 @@ function  figure_sprite_width($info_images, $parameters)
             $sprite_dimension["width"] = max($row_width);
         }
         elseif ($column > $nb_images)
+        {
             exit("ERREUR : Veuillez spécifier un nombre de colonne possible\n");
+        }
         else
         {
             foreach ($info_images as $image => $info)
@@ -232,7 +246,9 @@ function figure_sprite_height($info_images, $sprite_dimension, $nb_lines, $colum
                     $column_height[$k] += $info_images[$i][1];
                     $i++;
                     if ($i == $nb_images)
+                    {
                         break;
+                    }
                 }
             }
     }
@@ -245,7 +261,9 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     $column = $parameters[5];
     $nb_images = count($info_images);
     if ($column > 0)
+    {
             $nb_lines = ceil($nb_images / $column);
+    }
     else
     {
         $nb_lines = 2;
@@ -286,21 +304,34 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
                     exit("Arret du générateur...\n");
                 }
                 else
+                {
                     break;
+                }
             }
         }
     }
     else
+    {
         $css = fopen($parameters[2], 'w');
+    }
 
     fwrite($css, ".sprite {\n\twidth: " . $sprite_dimension["width"] . "px;\n\theight: " .$sprite_dimension["height"] . "px;\n\tbackground-image: url(\"" .$parameters[1]. "\");\n\tbackground-repeat: no-repeat;\n}\n");
 
+    $img_name_list = array();
     foreach($info_images as $key => $file)
     {
+        static $compteur = 0;
         preg_match("/.*\/(.*)\./", $file[4], $img_name);
         $img_name[1] = str_replace(" ", "-", $img_name[1]);
+        if (in_array($img_name[1], $img_name_list))
+        {
+            $compteur++;
+            $img_name[1] .= "-$compteur";
+        }
+
         fwrite($css, ".sprite-" . $img_name[1] . " {\n\tbackground-position: -" . $start_x . "px -" . $start_y . "px;\n\twidth: " . $file[0] . "px;" . "\n\theight: " . $file[1]  . "px;\n}\n");
 
+        array_push($img_name_list, $img_name[1]);
         if ($l < $nb_images  - 1)
         {
             $file[0] += $parameters[3];
@@ -323,7 +354,9 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
             $k++;
         }
         else
+        {
             $start_x += $file[0];
+        }
     }
     fclose($css);
 
@@ -343,9 +376,13 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
                     break;
                 }
                 elseif($input === "n" || $input === "non")
+                {
                     exit("Arret du générateur...\n");
+                }
                 else
+                {
                     break;
+                }
             }
         }
     }
@@ -398,13 +435,19 @@ if ($parameters[4] > 0)
     }
 }
 else
+{
     $images_r2u = stock_images($parameters, $info_images);
+}
 
 $sprite_dimension = figure_sprite_width($info_images, $parameters);
 // debug($sprite_dimension, $parameters, $info_images);
 
 if(create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u))
+{
     exit("Votre sprite et sa feuille de style ont bien été généré. Bonne journée :)\n");
+}
 else
+{
     exit("Une erreur est survenue. Merci de contacter l'Architecte.\n");
+}
 ?>
