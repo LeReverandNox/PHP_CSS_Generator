@@ -14,7 +14,7 @@ function check_args($argv, $argc)
 
 function check_options($options)
 {
-    $parameters = array(false, "sprite.png", "style.css", 0, 0, 0);
+    $parameters = array(false, "sprite.png", "style.css", 0, 0, 0, NULL);
 
     if (isset($options["r"]) || isset($options["recursive"]))
         $parameters[0] = true;
@@ -30,24 +30,50 @@ function check_options($options)
         $parameters[2] = $options["output-style"];
 
     if (isset($options["p"]))
-        $parameters[3] = (int)$options["p"];
+        $parameters[3] = $options["p"];
     if (isset($options["padding"]))
-        $parameters[3] = (int)$options["padding"];
+        $parameters[3] = $options["padding"];
 
     if (isset($options["o"]))
-        $parameters[4] = (int)$options["o"];
+        $parameters[4] = $options["o"];
     if (isset($options["override-size"]))
-        $parameters[4] = (int)$options["override-size"];
+        $parameters[4] = $options["override-size"];
 
     if (isset($options["c"]))
-        $parameters[5] = (int)$options["c"];
+        $parameters[5] = $options["c"];
     if (isset($options["columns_number"]))
-        $parameters[5] = (int)$options["columns_number"];
+        $parameters[5] = $options["columns_number"];
+
+    if (isset($options["a"]))
+        $parameters[6] = $options["a"];
+    if (isset($options["alpha"]))
+        $parameters[6] = $options["alpha"];
 
     if (is_array($parameters[1]))
-        exit("ERREUR: Veuillez fournir un seul nom de sprite !\n");
+        exit("ERREUR : Veuillez fournir un seul nom de sprite !\n");
+
     if (is_array($parameters[2]))
-        exit("ERREUR: Veuillez fournir un seul nom de feuille de style !\n");
+        exit("ERREUR : Veuillez fournir un seul nom de feuille de style !\n");
+
+    if (is_array($parameters[3]))
+        exit("ERREUR : Veuillez fournir un seul padding !\n");
+    else
+        $parameters[3] = (int)$parameters[3];
+
+    if (is_array($parameters[4]))
+        exit("ERREUR : Veuillez fournir une seule taille de redimensionnement !\n");
+    else
+        $parameters[4] = (int)$parameters[4];
+
+    if (is_array($parameters[5]))
+        exit("ERREUR : Veuillez fournir un seul nombre de colonnes !\n");
+    else
+        $parameters[5] = (int)$parameters[5];
+
+    if (is_array($parameters[6]))
+        exit("ERREUR : Veuillez fournir une seule couleur !\n");
+    elseif (isset($parameters[6]) && !ctype_xdigit($parameters[6]))
+        exit("ERREUR : Veuillez fournir une couleur héxadécimal valide !\n");
 
     if (!preg_match("/.*\.png$/", $parameters[1]))
         $parameters[1] .= ".png";
@@ -60,6 +86,24 @@ function check_options($options)
         exit("ERREUR : Veuillez entrer un nom de feuille de style valide\n");
 
     return ($parameters);
+}
+
+function convert_hex_to_rgb($hexa)
+{
+   if (strlen($hexa) == 6)
+   {
+        $r = hexdec(substr($hexa,0,2));
+        $g = hexdec(substr($hexa,2,2));
+        $b = hexdec(substr($hexa,4,2));
+   }
+   else
+   {
+        $r = hexdec(substr($hexa, 0, 1) . substr($hexa, 0, 1));
+        $g = hexdec(substr($hexa, 1, 1) . substr($hexa, 1, 1));
+        $b = hexdec(substr($hexa, 2, 1) . substr($hexa, 2, 1));
+   }
+   $rgb = array($r, $g, $b);
+   return $rgb;
 }
 
 function check_writable()
@@ -360,6 +404,15 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
             $l++;
         }
 
+        if (isset($parameters[6]))
+        {
+            $r = $parameters[6][0];
+            $g = $parameters[6][1];
+            $b = $parameters[6][2];
+            $transparent_color = imagecolorexact($images_r2u[$i], $r, $g, $b);
+            imagecolortransparent($images_r2u[$i], $transparent_color);
+        }
+
         imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
         $i++;
 
@@ -439,9 +492,15 @@ function debug($sprite_dimension, $parameters, $info_images)
 
 $images = array();
 
-$options = getopt("ri:s:p:o:c:", array("recursive", "output-image:", "output-style:", "padding:", "override-size:", "columns_number:"));
+$options = getopt("ri:s:p:o:c:a:", array("recursive", "output-image:", "output-style:", "padding:", "override-size:", "columns_number:", "alpha:"));
 $folder  = check_args($argv, $argc);
 $parameters = check_options($options);
+
+if (isset($parameters[6]))
+{
+    $parameters[6] = convert_hex_to_rgb($parameters[6]);
+}
+
 check_writable();
 check_folder($folder, $parameters[0]);
 $info_images = get_images_info($images);
