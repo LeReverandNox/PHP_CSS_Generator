@@ -427,9 +427,13 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
             $b = $parameters[6][2];
             $transparent_color = imagecolorexact($images_r2u[$i], $r, $g, $b);
             imagecolortransparent($images_r2u[$i], $transparent_color);
+            imagecopymerge($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1], 100);
+        }
+        else
+        {
+            imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
         }
 
-        imagecopy($sprite, $images_r2u[$i], $start_x , $start_y, 0, 0, $file[0], $file[1]);
         $i++;
 
         if ($nb_lines > 0)
