@@ -8,7 +8,7 @@ function check_args($argv, $argc)
     }
     else
     {
-        exit("ERREUR : Veuillez donner le nom d'un dossier à utiliser.\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez donner le nom d'un dossier à utiliser.\n");
     }
 }
 
@@ -50,40 +50,40 @@ function check_options($options)
         $parameters[6] = $options["alpha"];
 
     if (is_array($parameters[1]))
-        exit("ERREUR : Veuillez fournir un seul nom de sprite !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir un seul nom de sprite !\n");
 
     if (is_array($parameters[2]))
-        exit("ERREUR : Veuillez fournir un seul nom de feuille de style !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir un seul nom de feuille de style !\n");
 
     if (is_array($parameters[3]))
-        exit("ERREUR : Veuillez fournir un seul padding !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir un seul padding !\n");
     else
         $parameters[3] = (int)$parameters[3];
 
     if (is_array($parameters[4]))
-        exit("ERREUR : Veuillez fournir une seule taille de redimensionnement !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir une seule taille de redimensionnement !\n");
     else
         $parameters[4] = (int)$parameters[4];
 
     if (is_array($parameters[5]))
-        exit("ERREUR : Veuillez fournir un seul nombre de colonnes !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir un seul nombre de colonnes !\n");
     else
         $parameters[5] = (int)$parameters[5];
 
     if (is_array($parameters[6]))
-        exit("ERREUR : Veuillez fournir une seule couleur !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir une seule couleur !\n");
     elseif (isset($parameters[6]) && !ctype_xdigit($parameters[6]))
-        exit("ERREUR : Veuillez fournir une couleur héxadécimal valide !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir une couleur héxadécimal valide !\n");
 
     if (!preg_match("/.*\.png$/", $parameters[1]))
         $parameters[1] .= ".png";
     if(preg_match("/.\/./", $parameters[1]))
-        exit("ERREUR : Veuillez entrer un nom de sprite valide\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez entrer un nom de sprite valide\n");
 
     if (!preg_match("/.*\.css$/", $parameters[2]))
         $parameters[2] .= ".css";
     if(preg_match("/.\/./", $parameters[2]))
-        exit("ERREUR : Veuillez entrer un nom de feuille de style valide\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez entrer un nom de feuille de style valide\n");
 
     return ($parameters);
 }
@@ -111,7 +111,7 @@ function check_writable()
     $current_dir = getcwd();
     if (!is_writable($current_dir))
     {
-        exit("ERREUR : Vous n'avez pas les droits d'écriture sur le répertoire courant.\n");
+        exit("\033[31m ERREUR \033[0m: Vous n'avez pas les droits d'écriture sur le répertoire courant.\n");
     }
 }
 
@@ -173,7 +173,7 @@ function check_folder($folder, $recursive)
     }
     else
     {
-        exit("ERREUR : Veuillez fournir un dossier valide !\n");
+        exit("\033[31m ERREUR \033[0m: Veuillez fournir un dossier valide !\n");
     }
 
     if (count($images) != 0)
@@ -182,7 +182,7 @@ function check_folder($folder, $recursive)
     }
     else
     {
-        exit("ERREUR : Le dossier ne contient aucune image PNG !\n");
+        exit("\033[31m ERREUR \033[0m: Le dossier ne contient aucune image PNG !\n");
     }
 }
 
@@ -287,7 +287,7 @@ function  figure_sprite_width($info_images, $parameters)
         }
         elseif ($column > $nb_images)
         {
-            exit("ERREUR : Veuillez spécifier un nombre de colonne possible\n");
+            exit("\033[31m ERREUR \033[0m: Veuillez spécifier un nombre de colonne possible\n");
         }
         else
         {
@@ -369,7 +369,7 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     {
         while ($choice == true)
         {
-            echo "Le fichier $parameters[2] existe déjà, voulez vous l'écraser ? (O)ui / (N)on : ";
+            echo "\033[33m ATTENTION \033[0m: Le fichier $parameters[2] existe déjà, voulez vous l'écraser ? (O)ui / (N)on : ";
             while ($input = fgets(STDIN))
             {
                 $input = strtolower(trim($input));
@@ -455,7 +455,7 @@ function create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u
     {
         while ($choice == true)
         {
-            echo "Le fichier $parameters[1] existe déjà, voulez vous l'écraser ? (O)ui / (N)on  : ";
+            echo "\033[33m ATTENTION \033[0m: Le fichier $parameters[1] existe déjà, voulez vous l'écraser ? (O)ui / (N)on  : ";
             while ($input = fgets(STDIN))
             {
                 $input = strtolower(trim($input));
@@ -540,10 +540,10 @@ $sprite_dimension = figure_sprite_width($info_images, $parameters);
 
 if(create_sprite($info_images, $parameters, $sprite_dimension, $images_r2u))
 {
-    exit("Votre sprite et sa feuille de style ont bien été généré. Bonne journée :)\n");
+    exit("----------------------------------------------------------------\n\033[32m SUCCESS \033[0m: Votre sprite et sa feuille de style ont bien été généré.\nMerci d'avoir utilisé le Nox's Sprite Generator v1.0, bonne journée :)\n");
 }
 else
 {
-    exit("Une erreur est survenue. Merci de contacter l'Architecte.\n");
+    exit("\033[31m ERREUR \033[0m: Une erreur est survenue. Merci de contacter l'Architecte.\n");
 }
 ?>
