@@ -118,7 +118,16 @@ function check_writable()
 function scan_folder($directory, $recursive)
 {
     global $images;
-    $relative = ".".$directory;
+    if ($directory{0} != "/")
+    {
+        $directory = "/" . $directory;
+        $relative = "." . $directory;
+    }
+    else
+    {
+        $relative = $directory;
+    }
+
     if(is_readable($relative) && $dh = opendir($relative))
     {
         while(false !== ($file = readdir($dh)))
@@ -129,7 +138,14 @@ function scan_folder($directory, $recursive)
                 {
                     if (pathinfo($file, PATHINFO_EXTENSION) == "png")
                     {
-                        array_push($images, "." . $directory . $file);
+                        if ($relative{0} == "/")
+                        {
+                            array_push($images, $directory . $file);
+                        }
+                        else
+                        {
+                            array_push($images, "." . $directory . $file);
+                        }
                     }
                 }
                 elseif($recursive)
@@ -153,7 +169,7 @@ function check_folder($folder, $recursive)
 
     if (is_dir($folder) && is_readable($folder))
     {
-        $images = scan_folder("/" .   $folder, $recursive);
+             $images = scan_folder($folder, $recursive);
     }
     else
     {
